@@ -23,13 +23,13 @@ logger = logging.getLogger(__name__)
 
 
 def _db_path() -> str:
-    """Translate the SQLAlchemy-style DATABASE_URL into a plain sqlite3 path."""
-    url = settings.database_url
-    if url.startswith("sqlite:///"):
-        return url[len("sqlite:///") :]
-    if url.startswith("sqlite://"):
-        return url[len("sqlite://") :]
-    return url
+    """Resolve the sqlite3 path from settings.
+
+    The parsing logic now lives on `Settings.db_path` (shared with fetch_cmd).
+    This thin wrapper is kept as a seam so tests can monkeypatch the path
+    per request without mutating the global settings object.
+    """
+    return settings.db_path
 
 
 @asynccontextmanager
@@ -91,9 +91,7 @@ def list_employees(
         offset,
     )
     try:
-        rows = database.query_employees(
-            conn, country, min_rating, sort, limit, offset
-        )
+        rows = database.query_employees(conn, country, min_rating, sort, limit, offset)
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e)) from e
 

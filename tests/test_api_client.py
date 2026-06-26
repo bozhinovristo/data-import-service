@@ -8,6 +8,9 @@ import respx
 from src.api_client import APIClient
 from src.config import settings
 
+# The test server is provided by respx, which mocks out the external API. The
+# URLs below are used to register mock routes. The actual base URL is irrelevant
+# because respx intercepts all requests and returns the mocked responses.
 BASE_URL = "http://testserver"
 TOKEN_URL = f"{BASE_URL}/api/token/"
 EMPLOYEES_URL = f"{BASE_URL}/api/employee/list/"
@@ -41,7 +44,7 @@ def test_authenticate_success(client: APIClient) -> None:
     expires_at = _future_iso()
     route = respx.post(TOKEN_URL).mock(
         return_value=httpx.Response(
-            200, json={"access_token":"abc123", "expires_at": expires_at}
+            200, json={"access_token": "abc123", "expires_at": expires_at}
         )
     )
     token, returned_expires = client.authenticate()
@@ -55,7 +58,7 @@ def test_authenticate_success(client: APIClient) -> None:
 def test_token_cached_on_second_fetch(client: APIClient) -> None:
     token_route = respx.post(TOKEN_URL).mock(
         return_value=httpx.Response(
-            200, json={"access_token":"abc123", "expires_at": _future_iso()}
+            200, json={"access_token": "abc123", "expires_at": _future_iso()}
         )
     )
     employees_route = respx.get(EMPLOYEES_URL).mock(
@@ -77,7 +80,7 @@ def test_expired_token_triggers_reauthentication(client: APIClient) -> None:
 
     token_route = respx.post(TOKEN_URL).mock(
         return_value=httpx.Response(
-            200, json={"access_token":"fresh-token", "expires_at": _future_iso()}
+            200, json={"access_token": "fresh-token", "expires_at": _future_iso()}
         )
     )
     respx.get(EMPLOYEES_URL).mock(return_value=httpx.Response(200, json=[]))
@@ -91,7 +94,7 @@ def test_expired_token_triggers_reauthentication(client: APIClient) -> None:
 def test_500_triggers_retry(client: APIClient) -> None:
     respx.post(TOKEN_URL).mock(
         return_value=httpx.Response(
-            200, json={"access_token":"abc123", "expires_at": _future_iso()}
+            200, json={"access_token": "abc123", "expires_at": _future_iso()}
         )
     )
     employees_route = respx.get(EMPLOYEES_URL).mock(
@@ -109,7 +112,7 @@ def test_500_triggers_retry(client: APIClient) -> None:
 def test_4xx_is_not_retried(client: APIClient) -> None:
     respx.post(TOKEN_URL).mock(
         return_value=httpx.Response(
-            200, json={"access_token":"abc123", "expires_at": _future_iso()}
+            200, json={"access_token": "abc123", "expires_at": _future_iso()}
         )
     )
     employees_route = respx.get(EMPLOYEES_URL).mock(

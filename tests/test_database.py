@@ -106,7 +106,5 @@ def test_get_employee_by_id_returns_employee(conn: sqlite3.Connection) -> None:
 
 
 def test_get_employee_by_id_unknown_returns_none(conn: sqlite3.Connection) -> None:
-    result = database.get_employee_by_id(
-        conn, "00000000-0000-0000-0000-000000000000"
-    )
+    result = database.get_employee_by_id(conn, "00000000-0000-0000-0000-000000000000")
     assert result is None

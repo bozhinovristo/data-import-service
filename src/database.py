@@ -63,7 +63,11 @@ def init_db(db_path: str) -> None:
 
 
 def upsert_employee(conn: sqlite3.Connection, employee: Employee) -> None:
-    """Insert or replace an employee by id, stamping a fresh fetched_at."""
+    """Insert or replace an employee by id, stamping a fresh fetched_at.
+
+    Does not commit — the caller owns the transaction boundary, so a batch of
+    upserts can be committed as a single transaction.
+    """
     data = employee.model_dump(mode="json")
     data["fetched_at"] = datetime.now(timezone.utc).isoformat()
     placeholders = ", ".join(f":{col}" for col in _COLUMNS)
@@ -72,7 +76,6 @@ def upsert_employee(conn: sqlite3.Connection, employee: Employee) -> None:
         f"INSERT OR REPLACE INTO employees ({columns}) VALUES ({placeholders})",
         data,
     )
-    conn.commit()
     logger.debug("Upserted employee id=%s", data["id"])
 
 

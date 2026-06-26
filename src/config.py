@@ -11,5 +11,15 @@ class Settings(BaseSettings):
     api_password: str
     database_url: str
 
+    @property
+    def db_path(self) -> str:
+        """Return a plain filesystem path from the SQLAlchemy-style DATABASE_URL."""
+        url = self.database_url
+        if url.startswith("sqlite:///"):
+            return url[len("sqlite:///") :]
+        if url.startswith("sqlite://"):
+            return url[len("sqlite://") :]
+        return url
+
 
 settings = Settings()
