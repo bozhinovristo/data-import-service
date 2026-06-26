@@ -2,7 +2,7 @@
 name = "data-import-service"
 version = "0.1.0"
 description = "Authenticate against an external API, fetch employees, store to SQLite, and serve via FastAPI."
-authors = ["99tests <support@99tests.de>"]
+authors = ["Risto Bozhinov <bozhnovristo@gmail.com>"]
 readme = "README.md"
 packages = [{ include = "src" }]
 
