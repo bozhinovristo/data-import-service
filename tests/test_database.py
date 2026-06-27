@@ -91,6 +91,40 @@ def test_query_by_min_rating_filters(conn: sqlite3.Connection) -> None:
     assert len(inclusive) == 1
 
 
+def test_query_sort_by_rating_orders_ascending(conn: sqlite3.Connection) -> None:
+    database.upsert_employee(
+        conn, make_employee(id="11111111-1111-1111-1111-111111111111", rating="4.0")
+    )
+    database.upsert_employee(
+        conn, make_employee(id="22222222-2222-2222-2222-222222222222", rating="2.0")
+    )
+    database.upsert_employee(
+        conn, make_employee(id="33333333-3333-3333-3333-333333333333", rating="3.0")
+    )
+
+    rows = database.query_employees(conn, sort="rating")
+
+    assert [r["rating"] for r in rows] == [2.0, 3.0, 4.0]
+
+
+@pytest.mark.parametrize(
+    "field", ["first_name", "last_name", "rating", "date_of_birth"]
+)
+def test_query_accepts_all_valid_sort_fields(
+    conn: sqlite3.Connection, field: str
+) -> None:
+    database.upsert_employee(
+        conn, make_employee(id="11111111-1111-1111-1111-111111111111")
+    )
+    database.upsert_employee(
+        conn, make_employee(id="22222222-2222-2222-2222-222222222222")
+    )
+
+    rows = database.query_employees(conn, sort=field)
+
+    assert len(rows) == 2  # every allow-listed field produces runnable SQL
+
+
 def test_invalid_sort_raises_value_error(conn: sqlite3.Connection) -> None:
     with pytest.raises(ValueError):
         database.query_employees(conn, sort="id; DROP TABLE employees")

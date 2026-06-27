@@ -109,6 +109,24 @@ def test_500_triggers_retry(client: APIClient) -> None:
 
 
 @respx.mock
+def test_network_error_triggers_retry(client: APIClient) -> None:
+    respx.post(TOKEN_URL).mock(
+        return_value=httpx.Response(
+            200, json={"access_token": "abc123", "expires_at": _future_iso()}
+        )
+    )
+    employees_route = respx.get(EMPLOYEES_URL).mock(
+        side_effect=httpx.ConnectError("connection refused")
+    )
+
+    with pytest.raises(httpx.ConnectError):
+        client.fetch_employees()
+
+    # Network-level errors are transient: retried up to the attempt limit.
+    assert employees_route.call_count == 3
+
+
+@respx.mock
 def test_4xx_is_not_retried(client: APIClient) -> None:
     respx.post(TOKEN_URL).mock(
         return_value=httpx.Response(

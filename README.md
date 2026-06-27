@@ -148,6 +148,29 @@ poetry run ruff check . && poetry run black . && poetry run mypy src/
 Tests never make real network calls — HTTP is mocked at the `httpx` transport
 level with `respx`, and each test gets a fresh SQLite database.
 
+### Make targets
+
+Common tasks are wrapped in a `Makefile` (requires GNU `make`):
+
+```bash
+make install   # poetry install
+make fetch     # fetch from the API and store
+make seed      # seed demo data + export employees.json / .csv
+make run       # run the service on :8000
+make test      # run the test suite
+make gate      # lint + format-check + typecheck + test
+```
+
+### Docker
+
+```bash
+make docker-build      # or: docker build -t data-import-service .
+make docker-run        # serves the API on :8000, reading env from .env
+```
+
+The image installs runtime dependencies only and serves the API with uvicorn;
+all required environment variables are supplied at run time via `--env-file .env`.
+
 ---
 
 ## Architecture
