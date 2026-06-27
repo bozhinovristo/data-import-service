@@ -1,3 +1,5 @@
+import logging
+
 import pytest
 from pydantic import ValidationError
 
@@ -48,6 +50,16 @@ def test_unknown_fields_are_ignored() -> None:
     payload = {**VALID_PAYLOAD, "unexpected_field": "should be dropped"}
     emp = Employee.model_validate(payload)
     assert not hasattr(emp, "unexpected_field")
+
+
+def test_unknown_fields_are_logged(caplog: pytest.LogCaptureFixture) -> None:
+    payload = {**VALID_PAYLOAD, "department": "Engineering", "salary": 99000}
+    with caplog.at_level(logging.WARNING, logger="src.models"):
+        Employee.model_validate(payload)
+    # Both unknown fields are named in the warning so they stay traceable.
+    assert "department" in caplog.text
+    assert "salary" in caplog.text
+    assert VALID_PAYLOAD["id"] in caplog.text
 
 
 def test_missing_required_field_raises_validation_error() -> None:

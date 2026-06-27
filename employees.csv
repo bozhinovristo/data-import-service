@@ -1,0 +1,9 @@
+id,date_of_birth,image,email,first_name,last_name,title,address,country,bio,rating,fetched_at
+8c8c13b6-35ed-3ffb-92d5-c438825df67f,1990-06-29,https://example.com/img/1.png,dayni.mayez@example.com,Dayni,Mayez,Mr.,18342 Alisa Square Suite 259,USA,Backend engineer who enjoys clean data pipelines.,3.06,2026-06-27T12:00:00+00:00
+1f0a2b3c-4d5e-6f70-8190-a1b2c3d4e5f6,1988-02-14,https://example.com/img/2.png,alice.smith@example.com,Alice,Smith,Ms.,742 Evergreen Terrace,USA,Staff engineer focused on developer tooling.,4.7,2026-06-27T12:00:00+00:00
+2a3b4c5d-6e7f-8091-a2b3-c4d5e6f70819,1992-11-03,https://example.com/img/3.png,bob.jones@example.com,Bob,Jones,Mr.,55 King Street West,Canada,Data analyst with a soft spot for SQLite.,2.9,2026-06-27T12:00:00+00:00
+3b4c5d6e-7f80-91a2-b3c4-d5e6f7081920,1985-07-21,https://example.com/img/4.png,carlos.mendez@example.com,Carlos,Mendez,Dr.,Rua das Flores 123,Brazil,Researcher turned platform engineer.,3.8,2026-06-27T12:00:00+00:00
+4c5d6e7f-8091-a2b3-c4d5-e6f708192031,1995-04-09,https://example.com/img/5.png,yuki.tanaka@example.com,Yuki,Tanaka,Ms.,2-1-1 Nihonbashi,Japan,Frontend specialist who loves accessibility.,4.95,2026-06-27T12:00:00+00:00
+5d6e7f80-91a2-b3c4-d5e6-f70819203142,1991-09-30,https://example.com/img/6.png,emma.mueller@example.com,Emma,Müller,Ms.,Hauptstraße 5,Germany,SRE who keeps the pagers quiet.,1.6,2026-06-27T12:00:00+00:00
+6e7f8091-a2b3-c4d5-e6f7-081920314253,1987-12-12,https://example.com/img/7.png,olivia.brown@example.com,Olivia,Brown,Mrs.,221B Baker Street,United Kingdom,QA lead with a test for everything.,4.2,2026-06-27T12:00:00+00:00
+7f8091a2-b3c4-d5e6-f708-192031425364,1993-03-18,https://example.com/img/8.png,raj.patel@example.com,Raj,Patel,Mr.,12 MG Road,Australia,Full-stack developer and reluctant DBA.,3.3,2026-06-27T12:00:00+00:00
