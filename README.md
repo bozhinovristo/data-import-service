@@ -359,6 +359,52 @@ seed_cmd.py     ← CLI: seed demo data → export JSON/CSV snapshots
 
 ---
 
+## Rationale
+
+Why the key technical decisions were made, and the trade-offs accepted.
+
+- **FastAPI for the service.** The brief prefers it, and it pays off here: automatic
+  OpenAPI docs at `/docs`, request validation/coercion of query params for free, and
+  `Depends` for clean per-request resource management (a fresh DB connection per
+  request). *Trade-off:* a heavier dependency than Flask, accepted for the built-in
+  validation and docs.
+- **Stdlib `sqlite3`, not an ORM.** The data is a single flat table with an
+  `INSERT OR REPLACE` upsert keyed on `id`; an ORM (SQLAlchemy) would add a dependency
+  and indirection for no real gain at this scope. *Trade-off:* hand-written SQL and a
+  manual sort allowlist instead of ORM query building — kept safe by binding all values
+  and validating `sort` against `ALLOWED_SORT_FIELDS`. Migrating to Postgres/SQLAlchemy
+  later would be localized to `database.py`.
+- **Sync `httpx` + `tenacity`.** The import is a batch job, so synchronous code is
+  simpler to read and test; `tenacity` expresses the retry policy declaratively
+  (exponential backoff, scoped to 5xx + network errors only). *Trade-off:* not async —
+  fine for a one-shot fetch; `httpx.AsyncClient` is a drop-in path if throughput ever
+  matters.
+- **Pydantic v2 for the model.** Validation and type normalization belong at the
+  ingestion boundary: `EmailStr`, a real `date` for `date_of_birth`, and a
+  `mode="before"` validator that coerces the API's stringified `rating` to `float`.
+  Unknown fields are tolerated (`extra="ignore"`) but logged, so the importer never
+  crashes on a schema drift yet stays traceable.
+- **Fetch and serve are fully decoupled.** `service.py` reads only the local DB and
+  never imports `api_client.py`, so a request can never trigger an outbound API call.
+  This directly satisfies the brief's "do not proxy the external API on each request"
+  and keeps the read path fast and deterministic.
+- **Caller-owned transactions.** `database.upsert_employee` deliberately does not
+  commit; `fetch_cmd` commits once after the batch, making a run atomic — a mid-batch
+  failure leaves no partial state.
+- **Token caching with expiry + a single auth-header constant.** The token is cached
+  in memory and reused until `expires_at`, then re-minted automatically — avoiding a
+  re-auth on every call while respecting expiry. The non-standard `Access-Token` header
+  lives in one constant (`AUTH_HEADER_NAME`), so switching to `Authorization: Bearer`
+  is a one-line change.
+- **Config only through `config.py`.** All env vars are read in one place via
+  `pydantic-settings`, which fails fast at startup if any required variable is missing
+  and keeps secrets out of source and out of scattered `os.getenv` calls.
+- **The HTTP service is intentionally unauthenticated.** The brief asks it only to serve
+  locally stored employees; adding auth would be scope the spec doesn't request. The
+  optional API-key pattern is documented above for when that changes.
+
+---
+
 ## Design notes & assumptions
 
 - **The service is strictly read-only.** `service.py` imports `database.py` only —
