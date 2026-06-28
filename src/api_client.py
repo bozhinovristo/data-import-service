@@ -69,7 +69,15 @@ class APIClient:
         data: dict[str, Any] = response.json()
         token: str = data["access_token"]
         expires_at: str = data["expires_at"]
-        logger.info("Authenticated successfully; token expires at %s", expires_at)
+        # token_type is read (not silently discarded) for traceability. It is
+        # informational only here: this API mandates the fixed `Access-Token`
+        # header, so we never switch on it. Use .get() to tolerate its absence.
+        token_type: str | None = data.get("token_type")
+        logger.info(
+            "Authenticated successfully; token_type=%s, token expires at %s",
+            token_type,
+            expires_at,
+        )
         return token, expires_at
 
     def _get_token(self) -> str:
