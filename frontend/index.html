@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Employee Importer — Demo UI</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <!-- Login screen: authenticates against the test server's /api/token/ -->
+    <section id="login-view" class="login-view">
+      <form id="login-form" class="card" autocomplete="off">
+        <h1>Sign in</h1>
+        <p class="subtitle">Authenticate against the test server.</p>
+
+        <label for="username">Username</label>
+        <input id="username" name="username" type="text" value="testuser" required />
+
+        <label for="password">Password</label>
+        <input
+          id="password"
+          name="password"
+          type="password"
+          value="testpass"
+          required
+        />
+
+        <button id="login-btn" type="submit">Log in</button>
+        <p id="login-error" class="error" role="alert" hidden></p>
+      </form>
+    </section>
+
+    <!-- Table screen: shows employees from /api/employee/list/ -->
+    <section id="table-view" class="table-view" hidden>
+      <header class="topbar">
+        <div>
+          <strong>Employees</strong>
+          <span id="count" class="count"></span>
+        </div>
+        <button id="logout-btn" type="button" class="secondary">Log out</button>
+      </header>
+
+      <p id="table-error" class="error" role="alert" hidden></p>
+
+      <table id="employees-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>First name</th>
+            <th>Last name</th>
+            <th>Email</th>
+            <th>Title</th>
+            <th>Country</th>
+            <th>Rating</th>
+            <th>Date of birth</th>
+          </tr>
+        </thead>
+        <tbody id="employees-body"></tbody>
+      </table>
+    </section>
+
+    <script src="app.js"></script>
+  </body>
+</html>

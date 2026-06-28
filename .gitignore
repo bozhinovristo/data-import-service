@@ -4,6 +4,9 @@
 # Databases
 *.db
 
+# Local data volume (Docker bind mount)
+data/
+
 # Python caches
 __pycache__/
 *.py[cod]

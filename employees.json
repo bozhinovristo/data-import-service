@@ -11,7 +11,7 @@
     "country": "USA",
     "bio": "Backend engineer who enjoys clean data pipelines.",
     "rating": 3.06,
-    "fetched_at": "2026-06-27T12:00:00+00:00"
+    "fetched_at": "2026-06-28T10:13:03.844724+00:00"
   },
   {
     "id": "1f0a2b3c-4d5e-6f70-8190-a1b2c3d4e5f6",
@@ -25,7 +25,7 @@
     "country": "USA",
     "bio": "Staff engineer focused on developer tooling.",
     "rating": 4.7,
-    "fetched_at": "2026-06-27T12:00:00+00:00"
+    "fetched_at": "2026-06-28T10:13:03.846294+00:00"
   },
   {
     "id": "2a3b4c5d-6e7f-8091-a2b3-c4d5e6f70819",
@@ -39,7 +39,7 @@
     "country": "Canada",
     "bio": "Data analyst with a soft spot for SQLite.",
     "rating": 2.9,
-    "fetched_at": "2026-06-27T12:00:00+00:00"
+    "fetched_at": "2026-06-28T10:13:03.846443+00:00"
   },
   {
     "id": "3b4c5d6e-7f80-91a2-b3c4-d5e6f7081920",
@@ -53,7 +53,7 @@
     "country": "Brazil",
     "bio": "Researcher turned platform engineer.",
     "rating": 3.8,
-    "fetched_at": "2026-06-27T12:00:00+00:00"
+    "fetched_at": "2026-06-28T10:13:03.846533+00:00"
   },
   {
     "id": "4c5d6e7f-8091-a2b3-c4d5-e6f708192031",
@@ -67,7 +67,7 @@
     "country": "Japan",
     "bio": "Frontend specialist who loves accessibility.",
     "rating": 4.95,
-    "fetched_at": "2026-06-27T12:00:00+00:00"
+    "fetched_at": "2026-06-28T10:13:03.846678+00:00"
   },
   {
     "id": "5d6e7f80-91a2-b3c4-d5e6-f70819203142",
@@ -81,7 +81,7 @@
     "country": "Germany",
     "bio": "SRE who keeps the pagers quiet.",
     "rating": 1.6,
-    "fetched_at": "2026-06-27T12:00:00+00:00"
+    "fetched_at": "2026-06-28T10:13:03.846785+00:00"
   },
   {
     "id": "6e7f8091-a2b3-c4d5-e6f7-081920314253",
@@ -95,7 +95,7 @@
     "country": "United Kingdom",
     "bio": "QA lead with a test for everything.",
     "rating": 4.2,
-    "fetched_at": "2026-06-27T12:00:00+00:00"
+    "fetched_at": "2026-06-28T10:13:03.846864+00:00"
   },
   {
     "id": "7f8091a2-b3c4-d5e6-f708-192031425364",
@@ -109,6 +109,6 @@
     "country": "Australia",
     "bio": "Full-stack developer and reluctant DBA.",
     "rating": 3.3,
-    "fetched_at": "2026-06-27T12:00:00+00:00"
+    "fetched_at": "2026-06-28T10:13:03.846936+00:00"
   }
 ]

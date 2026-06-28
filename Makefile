@@ -1,4 +1,4 @@
-.PHONY: help install fetch seed run test cov lint format format-check typecheck gate docker-build docker-run clean
+.PHONY: help install fetch seed run ui test cov lint format format-check typecheck gate docker-build docker-run clean
 
 help:
 	@echo "Targets:"
@@ -6,6 +6,7 @@ help:
 	@echo "  fetch         Fetch employees from the API and store them"
 	@echo "  seed          Seed demo data and export employees.json / .csv"
 	@echo "  run           Run the FastAPI service on :8000"
+	@echo "  ui            Serve the demo UI on :5500 (needs mock server on :8001)"
 	@echo "  test          Run the test suite"
 	@echo "  cov           Run tests with a coverage report"
 	@echo "  lint          Lint with ruff"
@@ -26,6 +27,9 @@ seed:
 
 run:
 	poetry run uvicorn src.service:app --reload --port 8000
+
+ui:
+	python -m http.server 5500 --directory frontend
 
 test:
 	poetry run pytest
