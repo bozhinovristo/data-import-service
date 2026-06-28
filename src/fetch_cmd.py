@@ -6,6 +6,7 @@ This module is the pipeline orchestrator and the ONLY place that configures the
 root logger. It must never import src.service.
 """
 
+import asyncio
 import logging
 import sqlite3
 
@@ -19,21 +20,14 @@ from src.models import Employee
 logger = logging.getLogger(__name__)
 
 
-def main() -> None:
-    """Run the full fetch → validate → store pipeline."""
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
-        datefmt="%Y-%m-%dT%H:%M:%S",
-    )
-    logger.info("Starting employee import")
-
+async def _import_employees() -> None:
+    """Fetch (async) → validate → store the employee batch."""
     conn = sqlite3.connect(settings.db_path)
     try:
         database.init_db(settings.db_path)
         logger.info("Database ready at %s", settings.db_path)
 
-        raw_records = api_client.fetch_employees()
+        raw_records = await api_client.fetch_employees()
         logger.info("Fetched %d raw records from API", len(raw_records))
 
         stored = 0
@@ -61,6 +55,17 @@ def main() -> None:
         )
     finally:
         conn.close()
+
+
+def main() -> None:
+    """Configure logging and run the async fetch → validate → store pipeline."""
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+        datefmt="%Y-%m-%dT%H:%M:%S",
+    )
+    logger.info("Starting employee import")
+    asyncio.run(_import_employees())
 
 
 if __name__ == "__main__":

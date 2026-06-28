@@ -53,7 +53,7 @@ class APIClient:
         self._token: str | None = None
         self._expires_at: str | None = None
 
-    def authenticate(self) -> tuple[str, str]:
+    async def authenticate(self) -> tuple[str, str]:
         """Authenticate and return (token, expires_at)."""
         url = f"{self._cfg.api_base_url}/api/token/"
         payload = {
@@ -64,9 +64,10 @@ class APIClient:
             "password": self._cfg.api_password,
         }
         logger.debug("Authenticating against %s", url)
-        response = httpx.post(url, json=payload)
-        response.raise_for_status()
-        data: dict[str, Any] = response.json()
+        async with httpx.AsyncClient() as http:
+            response = await http.post(url, json=payload)
+            response.raise_for_status()
+            data: dict[str, Any] = response.json()
         token: str = data["access_token"]
         expires_at: str = data["expires_at"]
         # token_type is read (not silently discarded) for traceability. It is
@@ -80,7 +81,7 @@ class APIClient:
         )
         return token, expires_at
 
-    def _get_token(self) -> str:
+    async def _get_token(self) -> str:
         """Return a valid token, re-authenticating if missing or expired."""
         if (
             self._token is not None
@@ -90,7 +91,7 @@ class APIClient:
             logger.debug("Reusing cached token")
             return self._token
         logger.debug("Token missing or expired; re-authenticating")
-        self._token, self._expires_at = self.authenticate()
+        self._token, self._expires_at = await self.authenticate()
         return self._token
 
     @retry(
@@ -99,18 +100,19 @@ class APIClient:
         wait=wait_exponential(multiplier=1, min=1, max=10),
         reraise=True,
     )
-    def fetch_employees(self) -> list[dict[str, Any]]:
+    async def fetch_employees(self) -> list[dict[str, Any]]:
         """Fetch all employees using a cached (or freshly minted) token.
 
         Retries up to 3 times on 5xx/network errors with exponential backoff;
         4xx errors propagate immediately.
         """
-        token = self._get_token()
+        token = await self._get_token()
         url = f"{self._cfg.api_base_url}/api/employee/list/"
         logger.debug("Fetching employees from %s", url)
-        response = httpx.get(url, headers=_auth_headers(token))
-        response.raise_for_status()
-        employees: list[dict[str, Any]] = response.json()
+        async with httpx.AsyncClient() as http:
+            response = await http.get(url, headers=_auth_headers(token))
+            response.raise_for_status()
+            employees: list[dict[str, Any]] = response.json()
         logger.info("Fetched %d employee records", len(employees))
         return employees
 

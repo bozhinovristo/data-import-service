@@ -331,7 +331,7 @@ all required environment variables are supplied at run time via `--env-file .env
 External API
     │
     ▼
-api_client.py   ← authenticate, token cache + expiry, fetch, retries (tenacity)
+api_client.py   ← authenticate, token cache + expiry, async fetch (httpx.AsyncClient), retries (tenacity)
     │
     ▼
 models.py       ← Pydantic v2 Employee model: validation + type normalization
@@ -374,11 +374,15 @@ Why the key technical decisions were made, and the trade-offs accepted.
   manual sort allowlist instead of ORM query building — kept safe by binding all values
   and validating `sort` against `ALLOWED_SORT_FIELDS`. Migrating to Postgres/SQLAlchemy
   later would be localized to `database.py`.
-- **Sync `httpx` + `tenacity`.** The import is a batch job, so synchronous code is
-  simpler to read and test; `tenacity` expresses the retry policy declaratively
-  (exponential backoff, scoped to 5xx + network errors only). *Trade-off:* not async —
-  fine for a one-shot fetch; `httpx.AsyncClient` is a drop-in path if throughput ever
-  matters.
+- **Async `httpx` + `tenacity`.** The API client uses `httpx.AsyncClient`, and the
+  fetch pipeline is `async`, run from the CLI via `asyncio.run()` behind a thin sync
+  `main()`. `tenacity` drives the retries async-aware (the same exponential backoff,
+  scoped to 5xx + network errors only). *Boundary:* async is applied to the
+  network-bound fetch, **not** the read path — `service.py` and `database.py` stay
+  synchronous because SQLite is a blocking local driver and FastAPI already runs sync
+  handlers in a threadpool, so making them `async def` over a blocking driver would
+  stall the event loop. Async where it helps (I/O-bound HTTP), sync where it doesn't
+  (local disk).
 - **Pydantic v2 for the model.** Validation and type normalization belong at the
   ingestion boundary: `EmailStr`, a real `date` for `date_of_birth`, and a
   `mode="before"` validator that coerces the API's stringified `rating` to `float`.

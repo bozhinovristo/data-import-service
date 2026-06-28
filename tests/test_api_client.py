@@ -33,22 +33,30 @@ def client() -> APIClient:
 
 @pytest.fixture(autouse=True)
 def no_retry_sleep() -> Iterator[None]:
-    """Skip tenacity backoff sleeps so retry tests run instantly."""
+    """Skip tenacity backoff sleeps so retry tests run instantly.
+
+    fetch_employees is async, so tenacity drives retries with AsyncRetrying and
+    *awaits* its sleep — the override must therefore be an async no-op.
+    """
+
+    async def _instant(*args: object, **kwargs: object) -> None:
+        return None
+
     original = APIClient.fetch_employees.retry.sleep  # type: ignore[attr-defined]
-    APIClient.fetch_employees.retry.sleep = lambda *args, **kwargs: None  # type: ignore[attr-defined]
+    APIClient.fetch_employees.retry.sleep = _instant  # type: ignore[attr-defined]
     yield
     APIClient.fetch_employees.retry.sleep = original  # type: ignore[attr-defined]
 
 
 @respx.mock
-def test_authenticate_success(client: APIClient) -> None:
+async def test_authenticate_success(client: APIClient) -> None:
     expires_at = _future_iso()
     route = respx.post(TOKEN_URL).mock(
         return_value=httpx.Response(
             200, json={"access_token": "abc123", "expires_at": expires_at}
         )
     )
-    token, returned_expires = client.authenticate()
+    token, returned_expires = await client.authenticate()
 
     assert route.called
     assert token == "abc123"
@@ -67,7 +75,7 @@ def test_authenticate_success(client: APIClient) -> None:
 
 
 @respx.mock
-def test_fetch_sends_access_token_header(client: APIClient) -> None:
+async def test_fetch_sends_access_token_header(client: APIClient) -> None:
     respx.post(TOKEN_URL).mock(
         return_value=httpx.Response(
             200, json={"access_token": "abc123", "expires_at": _future_iso()}
@@ -77,14 +85,14 @@ def test_fetch_sends_access_token_header(client: APIClient) -> None:
         return_value=httpx.Response(200, json=[])
     )
 
-    client.fetch_employees()
+    await client.fetch_employees()
 
     # The fetch must carry the non-standard Access-Token header with the token.
     assert employees_route.calls[0].request.headers["Access-Token"] == "abc123"
 
 
 @respx.mock
-def test_token_cached_on_second_fetch(client: APIClient) -> None:
+async def test_token_cached_on_second_fetch(client: APIClient) -> None:
     token_route = respx.post(TOKEN_URL).mock(
         return_value=httpx.Response(
             200, json={"access_token": "abc123", "expires_at": _future_iso()}
@@ -94,8 +102,8 @@ def test_token_cached_on_second_fetch(client: APIClient) -> None:
         return_value=httpx.Response(200, json=[{"id": "1"}])
     )
 
-    client.fetch_employees()
-    client.fetch_employees()
+    await client.fetch_employees()
+    await client.fetch_employees()
 
     # Authenticated once, reused the cached token on the second fetch.
     assert token_route.call_count == 1
@@ -103,7 +111,7 @@ def test_token_cached_on_second_fetch(client: APIClient) -> None:
 
 
 @respx.mock
-def test_expired_token_triggers_reauthentication(client: APIClient) -> None:
+async def test_expired_token_triggers_reauthentication(client: APIClient) -> None:
     client._token = "stale-token"
     client._expires_at = _past_iso()
 
@@ -114,13 +122,13 @@ def test_expired_token_triggers_reauthentication(client: APIClient) -> None:
     )
     respx.get(EMPLOYEES_URL).mock(return_value=httpx.Response(200, json=[]))
 
-    client.fetch_employees()
+    await client.fetch_employees()
 
     assert token_route.call_count == 1
 
 
 @respx.mock
-def test_500_triggers_retry(client: APIClient) -> None:
+async def test_500_triggers_retry(client: APIClient) -> None:
     respx.post(TOKEN_URL).mock(
         return_value=httpx.Response(
             200, json={"access_token": "abc123", "expires_at": _future_iso()}
@@ -131,14 +139,14 @@ def test_500_triggers_retry(client: APIClient) -> None:
     )
 
     with pytest.raises(httpx.HTTPStatusError):
-        client.fetch_employees()
+        await client.fetch_employees()
 
     # 3 attempts total before the original error is re-raised.
     assert employees_route.call_count == 3
 
 
 @respx.mock
-def test_network_error_triggers_retry(client: APIClient) -> None:
+async def test_network_error_triggers_retry(client: APIClient) -> None:
     respx.post(TOKEN_URL).mock(
         return_value=httpx.Response(
             200, json={"access_token": "abc123", "expires_at": _future_iso()}
@@ -149,14 +157,14 @@ def test_network_error_triggers_retry(client: APIClient) -> None:
     )
 
     with pytest.raises(httpx.ConnectError):
-        client.fetch_employees()
+        await client.fetch_employees()
 
     # Network-level errors are transient: retried up to the attempt limit.
     assert employees_route.call_count == 3
 
 
 @respx.mock
-def test_4xx_is_not_retried(client: APIClient) -> None:
+async def test_4xx_is_not_retried(client: APIClient) -> None:
     respx.post(TOKEN_URL).mock(
         return_value=httpx.Response(
             200, json={"access_token": "abc123", "expires_at": _future_iso()}
@@ -167,19 +175,19 @@ def test_4xx_is_not_retried(client: APIClient) -> None:
     )
 
     with pytest.raises(httpx.HTTPStatusError):
-        client.fetch_employees()
+        await client.fetch_employees()
 
     # 4xx is a caller error: fail fast, no retries.
     assert employees_route.call_count == 1
 
 
 @respx.mock
-def test_auth_401_raises(client: APIClient) -> None:
+async def test_auth_401_raises(client: APIClient) -> None:
     route = respx.post(TOKEN_URL).mock(
         return_value=httpx.Response(401, json={"error": "unauthorized"})
     )
 
     with pytest.raises(httpx.HTTPStatusError):
-        client.authenticate()
+        await client.authenticate()
 
     assert route.call_count == 1
