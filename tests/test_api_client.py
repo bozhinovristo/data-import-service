@@ -1,3 +1,4 @@
+import json
 from collections.abc import Iterator
 from datetime import datetime, timedelta, timezone
 
@@ -52,6 +53,34 @@ def test_authenticate_success(client: APIClient) -> None:
     assert route.called
     assert token == "abc123"
     assert returned_expires == expires_at
+
+    # The POST body must carry exactly the five spec fields, with grant_type
+    # hardcoded to "password" and the credentials sourced from settings.
+    sent_body = json.loads(route.calls[0].request.content)
+    assert sent_body == {
+        "grant_type": "password",
+        "client_id": settings.api_client_id,
+        "client_secret": settings.api_client_secret,
+        "username": settings.api_username,
+        "password": settings.api_password,
+    }
+
+
+@respx.mock
+def test_fetch_sends_access_token_header(client: APIClient) -> None:
+    respx.post(TOKEN_URL).mock(
+        return_value=httpx.Response(
+            200, json={"access_token": "abc123", "expires_at": _future_iso()}
+        )
+    )
+    employees_route = respx.get(EMPLOYEES_URL).mock(
+        return_value=httpx.Response(200, json=[])
+    )
+
+    client.fetch_employees()
+
+    # The fetch must carry the non-standard Access-Token header with the token.
+    assert employees_route.calls[0].request.headers["Access-Token"] == "abc123"
 
 
 @respx.mock

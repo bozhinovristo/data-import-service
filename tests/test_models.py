@@ -73,3 +73,9 @@ def test_date_of_birth_parsed_as_date() -> None:
 
     emp = Employee.model_validate(VALID_PAYLOAD)
     assert emp.date_of_birth == date(1990, 6, 15)
+
+
+def test_invalid_date_of_birth_raises_validation_error() -> None:
+    payload = {**VALID_PAYLOAD, "date_of_birth": "not-a-date"}
+    with pytest.raises(ValidationError):
+        Employee.model_validate(payload)
