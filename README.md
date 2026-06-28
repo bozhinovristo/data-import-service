@@ -1,5 +1,7 @@
 # Data Import Service
 
+[![CI](https://github.com/bozhinovristo/data-import-service/actions/workflows/ci.yml/badge.svg)](https://github.com/bozhinovristo/data-import-service/actions/workflows/ci.yml)
+
 A small Python application that authenticates against an external API, fetches a list of employees, validates and stores them in SQLite, and exposes them through a read-only FastAPI HTTP service.
 
 The service **never proxies the external API** — it serves only what has already

@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gate:
+    name: Lint, typecheck, tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Install Poetry first so setup-python can cache the Poetry-managed venv.
+      # Pinned to match the Dockerfile (POETRY_VERSION=1.8.3) so CI, Docker, and
+      # the committed poetry.lock all agree.
+      - uses: snok/install-poetry@v1
+        with:
+          version: "1.8.3"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: poetry
+
+      - run: poetry install --no-interaction
+
+      # Same commands as the local `make gate`, kept as separate steps so a
+      # failure is annotated against the specific tool in the Actions UI.
+      - name: Lint (ruff)
+        run: poetry run ruff check .
+
+      - name: Format check (black)
+        run: poetry run black --check .
+
+      - name: Type check (mypy)
+        run: poetry run mypy src/
+
+      - name: Tests (pytest)
+        run: poetry run pytest
